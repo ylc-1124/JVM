@@ -1,7 +1,4 @@
-# JVM
-学习jvm的测试代码
-
-# *JVM_02类加载子系统
+# JVM_02类加载子系统
 
 ## 0.JVM架构图
 
@@ -65,22 +62,7 @@
 - 构造器方法中指令按语句在源文件中出现的**顺序执行**
 
   ```java
-  public class ClassInitTest {
-      private static int num = 1;
-  
-      static {
-          num = 2;
-          number = 20;
-          System.out.println(num);
-       //   System.out.println(number); //报错，非法前向引用
-      }
-      private static int number = 10;  //prepare: number=0  init: number=20 => number=10
-  
-      public static void main(String[] args) {
-          System.out.println(ClassInitTest.num);  //2
-          System.out.println(ClassInitTest.number); //10
-      }
-  }
+  public class ClassInitTest {    private static int num = 1;    static {        num = 2;        number = 20;        System.out.println(num);     //   System.out.println(number); //报错，非法前向引用    }    private static int number = 10;  //prepare: number=0  init: number=20 => number=10    public static void main(String[] args) {        System.out.println(ClassInitTest.num);  //2        System.out.println(ClassInitTest.number); //10    }}
   ```
 
 - clinit()不同于类的构造器。（关联：构造器是虚拟机视角下的init()）
@@ -88,52 +70,13 @@
 - 若该类具有父类，**jvm会保证子类的clinit()执行前，父类的clinit()已经执行完毕**
 
   ```java
-  public class ClinitTest {
-      static class Father {
-          public static int a = 1;
-          static {
-              a = 2;
-          }
-      }
-  
-      static class Son extends Father {
-          public static int b = a;
-      }
-  
-      public static void main(String[] args) {
-          System.out.println(Son.b); //2
-      }
-  }
+  public class ClinitTest {    static class Father {        public static int a = 1;        static {            a = 2;        }    }    static class Son extends Father {        public static int b = a;    }    public static void main(String[] args) {        System.out.println(Son.b); //2    }}
   ```
 
 - 虚拟机必须保证一个类的**clinit()方法在多线程下被同步加锁**。
 
   ```java
-  class DeadThread {
-      static {
-          if (true) {
-              System.out.println(Thread.currentThread().getName() + "初始化当前类"); //clinit 只会执行一次
-              while (true) { //自旋
-  
-              }
-          }
-      }
-  }
-  public class DeadThreadTest {
-      public static void main(String[] args) {
-          Runnable r = () -> {
-              System.out.println(Thread.currentThread().getName() + "开始");
-              DeadThread deadThread = new DeadThread();
-              System.out.println(Thread.currentThread().getName() + "结束");
-          };
-  
-          Thread t1 = new Thread(r, "T1");
-          Thread t2 = new Thread(r, "T2");
-  
-          t1.start();
-          t2.start();
-      }
-  }
+  class DeadThread {    static {        if (true) {            System.out.println(Thread.currentThread().getName() + "初始化当前类"); //clinit 只会执行一次            while (true) { //自旋            }        }    }}public class DeadThreadTest {    public static void main(String[] args) {        Runnable r = () -> {            System.out.println(Thread.currentThread().getName() + "开始");            DeadThread deadThread = new DeadThread();            System.out.println(Thread.currentThread().getName() + "结束");        };        Thread t1 = new Thread(r, "T1");        Thread t2 = new Thread(r, "T2");        t1.start();        t2.start();    }}
   ```
 
 ## 2.类的加载器分类
@@ -152,34 +95,7 @@
   - java核心类库都是使用引导类加载器BootStrapClassLoader加载的
 
   ```java
-  /**
-   * ClassLoader加载
-   */
-  public class ClassLoaderTest {
-    public static void main(String[] args) {
-          //获取系统类加载器
-          ClassLoader systemClassLoader = ClassLoader.getSystemClassLoader();
-          System.out.println(systemClassLoader);//sun.misc.Launcher$AppClassLoader@18b4aac2
-  
-          //获取其上层  扩展类加载器
-          ClassLoader extClassLoader = systemClassLoader.getParent();
-          System.out.println(extClassLoader);//sun.misc.Launcher$ExtClassLoader@610455d6
-  
-          //获取其上层 获取不到引导类加载器
-          ClassLoader bootStrapClassLoader = extClassLoader.getParent();
-          System.out.println(bootStrapClassLoader);//null
-  
-          //对于用户自定义类来说：使用系统类加载器进行加载
-          ClassLoader appClassLoader = ClassLoaderTest.class.getClassLoader();
-          System.out.println(appClassLoader);//sun.misc.Launcher$AppClassLoader@18b4aac2
-  
-          //String 类使用引导类加载器进行加载的  -->java核心类库都是使用引导类加载器加载的
-          ClassLoader classLoader1 = String.class.getClassLoader();
-          System.out.println(classLoader1);//null
-  
-      }
-  }
-  
+  /** * ClassLoader加载 */public class ClassLoaderTest {  public static void main(String[] args) {        //获取系统类加载器        ClassLoader systemClassLoader = ClassLoader.getSystemClassLoader();        System.out.println(systemClassLoader);//sun.misc.Launcher$AppClassLoader@18b4aac2        //获取其上层  扩展类加载器        ClassLoader extClassLoader = systemClassLoader.getParent();        System.out.println(extClassLoader);//sun.misc.Launcher$ExtClassLoader@610455d6        //获取其上层 获取不到引导类加载器        ClassLoader bootStrapClassLoader = extClassLoader.getParent();        System.out.println(bootStrapClassLoader);//null        //对于用户自定义类来说：使用系统类加载器进行加载        ClassLoader appClassLoader = ClassLoaderTest.class.getClassLoader();        System.out.println(appClassLoader);//sun.misc.Launcher$AppClassLoader@18b4aac2        //String 类使用引导类加载器进行加载的  -->java核心类库都是使用引导类加载器加载的        ClassLoader classLoader1 = String.class.getClassLoader();        System.out.println(classLoader1);//null    }}
   ```
 
   
@@ -211,33 +127,7 @@
 - 通过ClassLoader#getSystemClassLoader()方法可以获取到该类加载器
 
 ```java
-/**
- * 虚拟机自带加载器
- */
-public class ClassLoaderTest1 {
-    public static void main(String[] args) {
-        System.out.println("********启动类加载器*********");
-        URL[] urls = sun.misc.Launcher.getBootstrapClassPath().getURLs();
-        //获取BootStrapClassLoader能够加载的api路径
-        for (URL e:urls){
-            System.out.println(e.toExternalForm());
-        }
-
-        //从上面的路径中随意选择一个类 看看他的类加载器是什么
-        //Provider位于 /jdk1.8.0_171.jdk/Contents/Home/jre/lib/jsse.jar 下，引导类加载器加载它
-        ClassLoader classLoader = Provider.class.getClassLoader();
-        System.out.println(classLoader);//null
-
-        System.out.println("********拓展类加载器********");
-        String extDirs = System.getProperty("java.ext.dirs");
-        for (String path : extDirs.split(";")){
-            System.out.println(path);
-        }
-        //从上面的路径中随意选择一个类 看看他的类加载器是什么:拓展类加载器
-        ClassLoader classLoader1 = CurveDB.class.getClassLoader();
-        System.out.println(classLoader1);//sun.misc.Launcher$ExtClassLoader@4dc63996
-    }
-}
+/** * 虚拟机自带加载器 */public class ClassLoaderTest1 {    public static void main(String[] args) {        System.out.println("********启动类加载器*********");        URL[] urls = sun.misc.Launcher.getBootstrapClassPath().getURLs();        //获取BootStrapClassLoader能够加载的api路径        for (URL e:urls){            System.out.println(e.toExternalForm());        }        //从上面的路径中随意选择一个类 看看他的类加载器是什么        //Provider位于 /jdk1.8.0_171.jdk/Contents/Home/jre/lib/jsse.jar 下，引导类加载器加载它        ClassLoader classLoader = Provider.class.getClassLoader();        System.out.println(classLoader);//null        System.out.println("********拓展类加载器********");        String extDirs = System.getProperty("java.ext.dirs");        for (String path : extDirs.split(";")){            System.out.println(path);        }        //从上面的路径中随意选择一个类 看看他的类加载器是什么:拓展类加载器        ClassLoader classLoader1 = CurveDB.class.getClassLoader();        System.out.println(classLoader1);//sun.misc.Launcher$ExtClassLoader@4dc63996    }}
 ```
 
 
@@ -275,27 +165,7 @@ public class ClassLoaderTest1 {
 <img src="https://user-gold-cdn.xitu.io/2020/3/18/170ec8b36f5d4187?imageView2/0/w/1280/h/960/format/webp/ignore-error/1" alt="img" style="zoom:67%;" />
 
 ```java
-/**
- * 获取类加载器的方式演示
- */
-public class ClassLoaderTest2 {
-    public static void main(String[] args) {
-        try {
-            //1.
-            ClassLoader classLoader = Class.forName("java.lang.String").getClassLoader();
-            System.out.println(classLoader); //null
-            //2.
-            ClassLoader classLoader1 = Thread.currentThread().getContextClassLoader();
-            System.out.println(classLoader1);//sun.misc.Launcher$AppClassLoader@18b4aac2
-            //3.
-            ClassLoader classLoader2 = ClassLoader.getSystemClassLoader().getParent();
-            System.out.println(classLoader2);//sun.misc.Launcher$ExtClassLoader@1b6d3586
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-}
+/** * 获取类加载器的方式演示 */public class ClassLoaderTest2 {    public static void main(String[] args) {        try {            //1.            ClassLoader classLoader = Class.forName("java.lang.String").getClassLoader();            System.out.println(classLoader); //null            //2.            ClassLoader classLoader1 = Thread.currentThread().getContextClassLoader();            System.out.println(classLoader1);//sun.misc.Launcher$AppClassLoader@18b4aac2            //3.            ClassLoader classLoader2 = ClassLoader.getSystemClassLoader().getParent();            System.out.println(classLoader2);//sun.misc.Launcher$ExtClassLoader@1b6d3586        } catch (Exception e) {            e.printStackTrace();        }    }}
 ```
 
 ## 4. 双亲委派机制
@@ -309,22 +179,7 @@ public class ClassLoaderTest2 {
 例子:我们创建一个java.lang.String 类 试图覆盖java的核心类库中的String，但是由于双亲委派机制，最终是引导类加载器来加载String类，而核心库中的String没有main方法 
 
 ```java
-/**
- * 自定义一个和核心库包名一样的String类 但是由于双亲委派机制，这个类不会被加载
- */
-public class String {
-    static {
-        System.out.println("静态代码块执行");
-    }
-
-    public static void main(String[] args) {
-        System.out.println("hello,String");
-    }
-//    错误: 在类 java.lang.String 中找不到 main 方法, 请将 main 方法定义为:
-//    public static void main(String[] args)
-//    否则 JavaFX 应用程序类必须扩展javafx.application.Application
-}
-
+/** * 自定义一个和核心库包名一样的String类 但是由于双亲委派机制，这个类不会被加载 */public class String {    static {        System.out.println("静态代码块执行");    }    public static void main(String[] args) {        System.out.println("hello,String");    }//    错误: 在类 java.lang.String 中找不到 main 方法, 请将 main 方法定义为://    public static void main(String[] args)//    否则 JavaFX 应用程序类必须扩展javafx.application.Application}
 ```
 
 ### 4.2 双亲委派机制的优势
@@ -344,16 +199,7 @@ public class String {
 演示代码：
 
 ```java
-/**
- *  试图在java.lang下自定义一个类
- */
-public class MeDsh {
-    public static void main(String[] args) {
-        System.out.println("hello,MeDsh");
-    }
-    //java.lang.SecurityException: Prohibited package name: java.lang
-}
-
+/** *  试图在java.lang下自定义一个类 */public class MeDsh {    public static void main(String[] args) {        System.out.println("hello,MeDsh");    }    //java.lang.SecurityException: Prohibited package name: java.lang}
 ```
 
 ## 5. 沙箱安全机制
@@ -388,14 +234,14 @@ public class MeDsh {
   - 初始化一个类的子类
   - java虚拟机启动时被标明为启动类的类
   - JDK 7 开始提供的动态语言支持：
-     java.lang.invoke.MethodHandle实例的解析结果REF_getStatic、REF_putStatic、REF_invokeStatic句柄对应的类没有初始化，则初始化
+    java.lang.invoke.MethodHandle实例的解析结果REF_getStatic、REF_putStatic、REF_invokeStatic句柄对应的类没有初始化，则初始化
 - 除了以上七种情况，其他使用java类的方式都被看作是对类的被动使用，都不会导致类的初始化。
 
 ------
 
 
 
-# *JVM_03运行时数据区1-[程序计数器+虚拟机栈+本地方法栈]
+# JVM_03运行时数据区1-[程序计数器+虚拟机栈+本地方法栈]
 
 ## 0.内存与线程
 
@@ -460,17 +306,7 @@ PC寄存器是用来存储指向下一条指令的地址，也即将将要执行
 ### 1.2 代码演示
 
 ```java
-public class PCRegisterDemo {
-    public static void main(String[] args) {
-        int i = 10;
-        int j = 20;
-        int k = i + j;
-
-        String s = "abc";
-        System.out.println(i);
-        System.out.println(j);
-    }
-}
+public class PCRegisterDemo {    public static void main(String[] args) {        int i = 10;        int j = 20;        int k = i + j;        String s = "abc";        System.out.println(i);        System.out.println(j);    }}
 ```
 
 <img src="C:\Users\85370\AppData\Roaming\Typora\typora-user-images\image-20210728214610803.png" alt="image-20210728214610803" style="zoom:67%;" />
@@ -480,17 +316,17 @@ public class PCRegisterDemo {
 > 1.**使用PC寄存器存储字节码指令地址有什么用呢？/ 为什么使用PC寄存器记录当前线程的执行地址呢？** 
 
 -  **因为CPU需要不停的切换各个线程，这时候切换回来以后，需要知道接着从哪开始继续执行
-  JVM的字节码解释器就需要通过改变PC寄存器的值来明确下一条应该执行什么样的字节码指令**
+   JVM的字节码解释器就需要通过改变PC寄存器的值来明确下一条应该执行什么样的字节码指令**
 
 > 2.**PC寄存器为什么会设定为线程私有**
 
 - 我们都知道所谓的多线程在一个特定的时间段内指回执行其中某一个线程的方法，CPU会不停滴做任务切换，这样必然会导致经常中断或恢复，如何保证分毫无差呢？**为了能够准确地记录各个线程正在执行的当前字节码指令地址，最好的办法自然是为每一个线程都分配一个PC寄存器,**这样一来各个线程之间便可以进行独立计算，从而不会出现相互干扰的情况。
-   由于CPU时间片轮限制，众多线程在并发执行过程中，任何一个确定的时刻，一个处理器或者多核处理器中的一个内核，只会执行某个线程中的一条指令。这样必然导致经常中断或恢复，如何保证分毫无差呢？每个线程在创建后，都会产生自己的程序计数器和栈帧，程序计数器在各个线程之间互不影响。
+  由于CPU时间片轮限制，众多线程在并发执行过程中，任何一个确定的时刻，一个处理器或者多核处理器中的一个内核，只会执行某个线程中的一条指令。这样必然导致经常中断或恢复，如何保证分毫无差呢？每个线程在创建后，都会产生自己的程序计数器和栈帧，程序计数器在各个线程之间互不影响。
 
 > ##### CPU时间片
 
 - CPU时间片即CPU分配各各个程序的时间，每个线程被分配一个时间段。称作它的时间片。
-   在宏观上：我们可以同时打开多个应用程序，每个程序并行不悖，同时运行。 但在微观上：由于只有一个CPU，一次只能处理程序要求的一部分，如何处理公平，一种方法就是引入时间片，每个程序轮流执行
+  在宏观上：我们可以同时打开多个应用程序，每个程序并行不悖，同时运行。 但在微观上：由于只有一个CPU，一次只能处理程序要求的一部分，如何处理公平，一种方法就是引入时间片，每个程序轮流执行
 
 > **并行与并发**
 
@@ -510,7 +346,7 @@ public class PCRegisterDemo {
 #### 2.1.2 内存中的堆与栈
 
 - **栈是运行时的单位，而堆是存储的单位**
-   即：栈解决程序的运行问题，即程序如何执行，或者说如何处理数据。堆解决的是数据存储的问题，即数据怎么放、放在哪儿。
+  即：栈解决程序的运行问题，即程序如何执行，或者说如何处理数据。堆解决的是数据存储的问题，即数据怎么放、放在哪儿。
 
 - 一般来讲，对象主要都是放在堆空间的，是运行时数据区比较大的一块
 
@@ -543,15 +379,7 @@ java虚拟机规范允许**Java栈的大小是动态的或者是固定不变的*
 - 如果采用固定大小的Java虚拟机栈，那每一个线程的java虚拟机栈容量可以在线程创建的时候独立选定。如果线程请求分配的栈容量超过java虚拟机栈允许的最大容量，java虚拟机将会抛出一个 **StackOverFlowError**异常（栈溢出）
 
 ```java
-/**
- * 栈溢出异常测试
- */
-public class StackOverFlowErrorTest {
-    public static void main(String[] args) {
-        main(args);
-    }
-    //Exception in thread "main" java.lang.StackOverflowError
-}
+/** * 栈溢出异常测试 */public class StackOverFlowErrorTest {    public static void main(String[] args) {        main(args);    }    //Exception in thread "main" java.lang.StackOverflowError}
 ```
 
 - 如果java虚拟机栈可以动态拓展，并且在尝试拓展的时候无法申请到足够的内存，或者在创建新的线程时没有足够的内存去创建对应的虚拟机栈，那java虚拟机将会抛出一个 **OutOfMemoryError异常**
@@ -561,20 +389,7 @@ public class StackOverFlowErrorTest {
 > 我们可以使用参数-Xss选项来设置线程的最大栈空间，栈的大小直接决定了函数调用的最大可达深度。 （IDEA设置方法：Run-EditConfigurations-VM options 填入指定栈的大小-Xss 256k）
 
 ```java
-/**
- * 演示栈中的异常
- *
- * 默认情况下：count 10818
- * 设置栈的大小： -Xss256k count 1872
- */
-public class StackErrorTest {
-    private static int count = 1;
-    public static void main(String[] args) {
-        System.out.println(count);
-        count++;
-        main(args);
-    }
-}
+/** * 演示栈中的异常 * * 默认情况下：count 10818 * 设置栈的大小： -Xss256k count 1872 */public class StackErrorTest {    private static int count = 1;    public static void main(String[] args) {        System.out.println(count);        count++;        main(args);    }}
 ```
 
 ### 2.2 栈的存储结构和运行原理
@@ -604,43 +419,7 @@ public class StackErrorTest {
 <img src="https://user-gold-cdn.xitu.io/2020/3/18/170ecafb0c5ada68?imageView2/0/w/1280/h/960/format/webp/ignore-error/1" alt="img" style="zoom:67%;" />
 
 ```java
-/**
- * 栈帧运行原理演示
- */
-public class StackFrameTest {
-    public static void main(String[] args) {
-        StackFrameTest test = new StackFrameTest();
-        test.method1();
-        //method1()开始执行。。。
-        //method2()开始执行。。。
-        //method3()开始执行。。。
-        //method3()执行结束。。。
-        //method2()执行结束。。。
-        //method1()执行结束。。。
-    }
-
-    public void method1(){
-        System.out.println("method1()开始执行。。。");
-        method2();
-        System.out.println("method1()执行结束。。。");
-    }
-
-    public int method2(){
-        System.out.println("method2()开始执行。。。");
-        int i = 10;
-        int m = (int) method3();
-        System.out.println("method2()执行结束。。。");
-        return i+m;
-    }
-
-    public double method3(){
-        System.out.println("method3()开始执行。。。");
-        double j = 20.0;
-        System.out.println("method3()执行结束。。。");
-        return j;
-    }
-
-}
+/** * 栈帧运行原理演示 */public class StackFrameTest {    public static void main(String[] args) {        StackFrameTest test = new StackFrameTest();        test.method1();        //method1()开始执行。。。        //method2()开始执行。。。        //method3()开始执行。。。        //method3()执行结束。。。        //method2()执行结束。。。        //method1()执行结束。。。    }    public void method1(){        System.out.println("method1()开始执行。。。");        method2();        System.out.println("method1()执行结束。。。");    }    public int method2(){        System.out.println("method2()开始执行。。。");        int i = 10;        int m = (int) method3();        System.out.println("method2()执行结束。。。");        return i+m;    }    public double method3(){        System.out.println("method3()开始执行。。。");        double j = 20.0;        System.out.println("method3()执行结束。。。");        return j;    }}
 ```
 
 #### 2.2.2 栈帧的内部结构
@@ -704,15 +483,7 @@ public class StackFrameTest {
 - 如果当前帧是由构造方法或者实例方法创建的，那么**该对象引用this将会存放在index为0的slot处**,其余的参数按照参数表顺序排列。
 
 ```java
-public class LocalVariablesTest {
-
-    private int count = 1;
-    //静态方法不能使用this
-    public static void testStatic(){
-        //编译错误，因为this变量不存在与当前方法的局部变量表中！！！
-        System.out.println(this.count);
-    }
-}
+public class LocalVariablesTest {    private int count = 1;    //静态方法不能使用this    public static void testStatic(){        //编译错误，因为this变量不存在与当前方法的局部变量表中！！！        System.out.println(this.count);    }}
 ```
 
 #### 2.3.3 slot的重复利用
@@ -720,15 +491,7 @@ public class LocalVariablesTest {
 > 栈帧中的局部变量表中的槽位是可以重复利用的，如果一个局部变量过了其作用域，那么在其作用域之后申明的新的局部变量就很有可能会复用过期局部变量的槽位，从而达到节省资源的目的。
 
 ```java
-  private void test2() {
-        int a = 0;
-        {
-            int b = 0;
-            b = a+1;
-        }
-        //变量c使用之前已经销毁的变量b占据的slot位置
-        int c = a+1;
-    }
+  private void test2() {        int a = 0;        {            int b = 0;            b = a+1;        }        //变量c使用之前已经销毁的变量b占据的slot位置        int c = a+1;    }
 ```
 
 
@@ -806,38 +569,7 @@ public class LocalVariablesTest {
 #### 2.4.2 i++ 和 ++i的区别（字节码指令层面分析）
 
 ```java
-   private void add() {
-        /**
-         * 第一类问题  没有区别
-         */
-        int i1 = 10;
-        i1++;  
-        int i2 = 20;
-        ++i2;
-        /**
-         * 第二类问题
-         */
-        int i3 = 10;
-        int i4 = i3++;  //10
-
-        int i5 = 10;
-        int i6 = ++i5;  //11
-
-        /**
-         * 第三类问题
-         */
-        int i7 = 10;
-        i7 = i7++;      //10
-
-        int i8 = 10;
-        i8 = ++i8;     //11
-
-        /**
-         * 第四类问题
-         */
-        int i9 = 10;
-        int i10 = i9++ + ++i9;   //22
-    }
+   private void add() {        /**         * 第一类问题  没有区别         */        int i1 = 10;        i1++;          int i2 = 20;        ++i2;        /**         * 第二类问题         */        int i3 = 10;        int i4 = i3++;  //10        int i5 = 10;        int i6 = ++i5;  //11        /**         * 第三类问题         */        int i7 = 10;        i7 = i7++;      //10        int i8 = 10;        i8 = ++i8;     //11        /**         * 第四类问题         */        int i9 = 10;        int i10 = i9++ + ++i9;   //22    }
 ```
 
 <img src="C:\Users\85370\AppData\Roaming\Typora\typora-user-images\image-20210729180608746.png" alt="image-20210729180608746"  />
@@ -867,25 +599,25 @@ public class LocalVariablesTest {
 > **在JVM中，将符号引用转换为调用方法的直接引用与方法的绑定机制相关** 
 
 - **静态链接**
-   当一个 字节码文件被装载进JVM内部时，如果被调用的目标方法在编译期可知，且运行期保持不变时。这种情况下将调用方法的符号引用转换为直接引用的过程称之为静态链接。
+  当一个 字节码文件被装载进JVM内部时，如果被调用的目标方法在编译期可知，且运行期保持不变时。这种情况下将调用方法的符号引用转换为直接引用的过程称之为静态链接。
 
 - **动态链接**
-   如果被调用的方法在编译期无法被确定下来，也就是说，只能够在程序运行期将调用方法的符号引用转换为直接引用，由于这种引用转换过程具备动态性，因此也就被称之为动态链接。
+  如果被调用的方法在编译期无法被确定下来，也就是说，只能够在程序运行期将调用方法的符号引用转换为直接引用，由于这种引用转换过程具备动态性，因此也就被称之为动态链接。
 
 
 
 > **对应的方法的绑定机制为：早期绑定（Early Binding）和晚期绑定（Late Bingding）。绑定是一个字段、方法或者类在符号引用被替换为直接引用的过程，这仅仅发生一次。**
 
 - **早期绑定**
-   早期绑定就是指被调用的目标方法如果在编译期可知，且运行期保持不变时，即可将这个方法与所属的类型进行绑定，这样一来，由于明确了被调用的目标方法究竟是哪一个，因此也就可以使用静态链接的方式将符号引用转换为直接引用。
+  早期绑定就是指被调用的目标方法如果在编译期可知，且运行期保持不变时，即可将这个方法与所属的类型进行绑定，这样一来，由于明确了被调用的目标方法究竟是哪一个，因此也就可以使用静态链接的方式将符号引用转换为直接引用。
 
 - **晚期绑定**
-   如果被调用的方法在编译期无法被确定下来，只能够在程序运行期根据实际的类型绑定相关的方法，这种绑定方式也就被称之为晚期绑
+  如果被调用的方法在编译期无法被确定下来，只能够在程序运行期根据实际的类型绑定相关的方法，这种绑定方式也就被称之为晚期绑
 
 
 
 > 随着高级语言的横空出世，类似于java一样的基于面向对象的编程语言如今越来越多，尽管这类编程语言在语法风格上存在一定的差别，但是它们彼此之间始终保持着一个共性，那就是都支持封装，集成和多态等面向对象特性，**既然这一类的编程语言具备多态特性，那么自然也就具备早期绑定和晚期绑定两种绑定方式。**
->  Java中任何一个普通的方法其实都具备虚函数的特征，它们相当于C++语言中的虚函数（C++中则需要使用关键字virtual来显式定义）。如果在Java程序中不希望某个方法拥有虚函数的特征时，则可以使用关键字final来标记这个方法。
+> Java中任何一个普通的方法其实都具备虚函数的特征，它们相当于C++语言中的虚函数（C++中则需要使用关键字virtual来显式定义）。如果在Java程序中不希望某个方法拥有虚函数的特征时，则可以使用关键字final来标记这个方法。
 
 
 
@@ -911,83 +643,7 @@ public class LocalVariablesTest {
  前四条指令固化在虚拟机内部，方法的调用执行不可人为干预，而invokedynamic指令则支持由用户确定方法版本。其中**invokestatic指令和invokespecial指令调用的方法称为非虚方法，其余的（final修饰的除外）称为虚方法。**
 
 ```java
-/**
- * 解析调用中非虚方法、虚方法的测试
- */
-class Father {
-    public Father(){
-        System.out.println("Father默认构造器");
-    }
-
-    public static void showStatic(String s){
-        System.out.println("Father show static"+s);
-    }
-
-    public final void showFinal(){
-        System.out.println("Father show final");
-    }
-
-    public void showCommon(){
-        System.out.println("Father show common");
-    }
-
-}
-
-public class Son extends Father{
-    public Son(){
-        super();
-    }
-
-    public Son(int age){
-        this();
-    }
-
-    public static void main(String[] args) {
-        Son son = new Son();
-        son.show();
-    }
-
-    //不是重写的父类方法，因为静态方法不能被重写
-    public static void showStatic(String s){
-        System.out.println("Son show static"+s);
-    }
-
-    private void showPrivate(String s){
-        System.out.println("Son show private"+s);
-    }
-
-    public void show(){
-        //invokestatic
-        showStatic(" 大头儿子");
-        //invokestatic
-        super.showStatic(" 大头儿子");
-        //invokespecial
-        showPrivate(" hello!");
-        //invokespecial
-        super.showCommon();
-        //invokevirtual 因为此方法声明有final 不能被子类重写，所以也认为该方法是非虚方法
-        showFinal();
-        //虚方法如下
-        //invokevirtual
-        showCommon();//没有显式加super，被认为是虚方法，因为子类可能重写showCommon
-        info();
-
-        MethodInterface in = null;
-        //invokeinterface  不确定接口实现类是哪一个 需要重写
-        in.methodA();
-
-    }
-
-    public void info(){
-
-    }
-
-}
-
-interface MethodInterface {
-    void methodA();
-}
-
+/** * 解析调用中非虚方法、虚方法的测试 */class Father {    public Father(){        System.out.println("Father默认构造器");    }    public static void showStatic(String s){        System.out.println("Father show static"+s);    }    public final void showFinal(){        System.out.println("Father show final");    }    public void showCommon(){        System.out.println("Father show common");    }}public class Son extends Father{    public Son(){        super();    }    public Son(int age){        this();    }    public static void main(String[] args) {        Son son = new Son();        son.show();    }    //不是重写的父类方法，因为静态方法不能被重写    public static void showStatic(String s){        System.out.println("Son show static"+s);    }    private void showPrivate(String s){        System.out.println("Son show private"+s);    }    public void show(){        //invokestatic        showStatic(" 大头儿子");        //invokestatic        super.showStatic(" 大头儿子");        //invokespecial        showPrivate(" hello!");        //invokespecial        super.showCommon();        //invokevirtual 因为此方法声明有final 不能被子类重写，所以也认为该方法是非虚方法        showFinal();        //虚方法如下        //invokevirtual        showCommon();//没有显式加super，被认为是虚方法，因为子类可能重写showCommon        info();        MethodInterface in = null;        //invokeinterface  不确定接口实现类是哪一个 需要重写        in.methodA();    }    public void info(){    }}interface MethodInterface {    void methodA();}
 ```
 
 > ##### 关于invokedynamic指令
@@ -1093,60 +749,7 @@ interface MethodInterface {
 - 要具体情况具体分析
 
 ```java
-/**
- * 面试题：
- * 方法中定义的局部变量是否线程安全？具体情况具体分析
- *
- * 何为线程安全？
- *     如果只有一个线程可以操作此数据，则必是线程安全的。
- *     如果有多个线程操作此数据，则此数据是共享数据。如果不考虑同步机制的话，会存在线程安全问题
- *
- * StringBuffer是线程安全的，StringBuilder不是
- */
-public class StringBuilderTest {
-
-    //s1的声明方式是线程安全的
-    public static void method1(){
-        StringBuilder s1 = new StringBuilder();
-        s1.append("a");
-        s1.append("b");
-    }
-
-    //stringBuilder的操作过程：是不安全的，因为method2可以被多个线程调用
-    public static void method2(StringBuilder stringBuilder){
-        stringBuilder.append("a");
-        stringBuilder.append("b");
-    }
-
-    //s1的操作：是线程不安全的 有返回值，可能被其他线程共享
-    public static StringBuilder method3(){
-        StringBuilder s1 = new StringBuilder();
-        s1.append("a");
-        s1.append("b");
-        return s1;
-    }
-
-    //s1的操作：是线程安全的 ，StringBuilder的toString方法是创建了一个新的String，s1在内部消亡了
-    public static String method4(){
-        StringBuilder s1 = new StringBuilder();
-        s1.append("a");
-        s1.append("b");
-        return s1.toString();
-    }
-
-    public static void main(String[] args) {
-        StringBuilder s = new StringBuilder();
-        new Thread(()->{
-            s.append("a");
-            s.append("b");
-        }).start();
-
-        method2(s);
-
-    }
-
-}
-
+/** * 面试题： * 方法中定义的局部变量是否线程安全？具体情况具体分析 * * 何为线程安全？ *     如果只有一个线程可以操作此数据，则必是线程安全的。 *     如果有多个线程操作此数据，则此数据是共享数据。如果不考虑同步机制的话，会存在线程安全问题 * * StringBuffer是线程安全的，StringBuilder不是 */public class StringBuilderTest {    //s1的声明方式是线程安全的    public static void method1(){        StringBuilder s1 = new StringBuilder();        s1.append("a");        s1.append("b");    }    //stringBuilder的操作过程：是不安全的，因为method2可以被多个线程调用    public static void method2(StringBuilder stringBuilder){        stringBuilder.append("a");        stringBuilder.append("b");    }    //s1的操作：是线程不安全的 有返回值，可能被其他线程共享    public static StringBuilder method3(){        StringBuilder s1 = new StringBuilder();        s1.append("a");        s1.append("b");        return s1;    }    //s1的操作：是线程安全的 ，StringBuilder的toString方法是创建了一个新的String，s1在内部消亡了    public static String method4(){        StringBuilder s1 = new StringBuilder();        s1.append("a");        s1.append("b");        return s1.toString();    }    public static void main(String[] args) {        StringBuilder s = new StringBuilder();        new Thread(()->{            s.append("a");            s.append("b");        }).start();        method2(s);    }}
 ```
 
 
@@ -1180,14 +783,14 @@ public class StringBuilderTest {
 
 
 
-# *JVM_04 本地方法接口
+# JVM_04 本地方法接口
 
 ## 本地方法
 
 - 简单来讲，**一个Native Method就是一个java调用非java代码的接口**，一个Native Method 是这样一个java方法：该方法的实现由非Java语言实现，比如C。这个特征并非java特有，很多其他的编程语言都有这一机制，比如在C++ 中，你可以用extern “C” 告知C++ 编译器去调用一个C的函数。
 - 在定义一个native method时，并不提供实现体（有些像定义一个Java interface），因为其实现体是由非java语言在外面实现的。
 - 本地接口的作用是融合不同的编程语言为java所用，它的初衷是融合C/C++程序。
-   标识符native可以与其他所有的java标识符连用，但是abstract除外。
+  标识符native可以与其他所有的java标识符连用，但是abstract除外。
 
 ```java
 /**
@@ -1217,13 +820,13 @@ public  class IHaveNatives {
 > java使用起来非常方便，然而有些层次的任务用java实现起来不容易，或者我们对程序的效率很在意时，问题就来了。
 
 - 与java环境外交互：
-   有时java应用需要与java外面的环境交互，这是本地方法存在的主要原因。 你可以想想java需要与一些底层系统，如擦偶偶系统或某些硬件交换信息时的情况。本地方法正式这样的一种交流机制：它为我们提供了一个非常简洁的接口，而且我们无需去了解java应用之外的繁琐细节。
+  有时java应用需要与java外面的环境交互，这是本地方法存在的主要原因。 你可以想想java需要与一些底层系统，如擦偶偶系统或某些硬件交换信息时的情况。本地方法正式这样的一种交流机制：它为我们提供了一个非常简洁的接口，而且我们无需去了解java应用之外的繁琐细节。
 
 - 与操作系统交互
-   JVM支持着java语言本身和运行库，它是java程序赖以生存的平台，它由一个解释器（解释字节码）和一些连接到本地代码的库组成。然而不管怎样，它毕竟不是一个完整的系统，它经常依赖于一些底层系统的支持。这些底层系统常常是强大的操作系统。通过使用本地方法，我们得以用java实现了jre的与底层系统的交互，甚至jvm的一些部分就是用C写的。还有，如果我们要使用一些java语言本身没有提供封装的操作系统特性时，我们也需要使用本地方法。
+  JVM支持着java语言本身和运行库，它是java程序赖以生存的平台，它由一个解释器（解释字节码）和一些连接到本地代码的库组成。然而不管怎样，它毕竟不是一个完整的系统，它经常依赖于一些底层系统的支持。这些底层系统常常是强大的操作系统。通过使用本地方法，我们得以用java实现了jre的与底层系统的交互，甚至jvm的一些部分就是用C写的。还有，如果我们要使用一些java语言本身没有提供封装的操作系统特性时，我们也需要使用本地方法。
 
 - Sun’s Java
-   Sun的解释器是用C实现的，这使得它能像一些普通的C一样与外部交互。jre大部分是用java实现的，它也通过一些本地方法与外界交互。例如：类java.lang.Thread的setPriority()方法是用Java实现的，但是它实现调用的事该类里的本地方法setPriority0（）。这个本地方法是用C实现的，并被植入JVM内部，在Windows 95的平台上，这个本地方法最终将调用Win32 SetProority（）API。这是一个本地方法的具体实现由JVM直接提供，更多的情况是本地方法由外部的动态链接库（external dynamic link library）提供，然后被JVM调用。
+  Sun的解释器是用C实现的，这使得它能像一些普通的C一样与外部交互。jre大部分是用java实现的，它也通过一些本地方法与外界交互。例如：类java.lang.Thread的setPriority()方法是用Java实现的，但是它实现调用的事该类里的本地方法setPriority0（）。这个本地方法是用C实现的，并被植入JVM内部，在Windows 95的平台上，这个本地方法最终将调用Win32 SetProority（）API。这是一个本地方法的具体实现由JVM直接提供，更多的情况是本地方法由外部的动态链接库（external dynamic link library）提供，然后被JVM调用。
 
 ## 现状
 
@@ -1233,7 +836,7 @@ public  class IHaveNatives {
 
 ------
 
-# *JVM_05 运行时数据区2-堆
+# JVM_05 运行时数据区2-堆
 
 ## 1.核心概述
 
@@ -1289,26 +892,7 @@ public class HeapDemo {
 ### 1.2 分析SimpleHeap的jvm情况
 
 ```java
-public class SimpleHeap {
-    private int id;//属性、成员变量
-
-    public SimpleHeap(int id) {
-        this.id = id;
-    }
-
-    public void show() {
-        System.out.println("My ID is " + id);
-    }
-    public static void main(String[] args) {
-        SimpleHeap sl = new SimpleHeap(1);
-        SimpleHeap s2 = new SimpleHeap(2);
-
-        int[] arr = new int[10];
-
-        Object[] arr1 = new Object[10];
-    }
-}
-
+public class SimpleHeap {    private int id;//属性、成员变量    public SimpleHeap(int id) {        this.id = id;    }    public void show() {        System.out.println("My ID is " + id);    }    public static void main(String[] args) {        SimpleHeap sl = new SimpleHeap(1);        SimpleHeap s2 = new SimpleHeap(2);        int[] arr = new int[10];        Object[] arr1 = new Object[10];    }}
 ```
 
 <img src="https://user-gold-cdn.xitu.io/2020/5/28/1725a63f3bd98cd1?imageView2/0/w/1280/h/960/format/webp/ignore-error/1" alt="img" style="zoom:67%;" />
@@ -1363,27 +947,7 @@ public class SimpleHeap {
 ### 2.1 查看堆内存大小
 
 ```java
-public class HeapSpaceInitial {
-    public static void main(String[] args) {
-
-        //返回Java虚拟机中的堆内存总量
-        long initialMemory = Runtime.getRuntime().totalMemory() / 1024 / 1024;
-        //返回Java虚拟机试图使用的最大堆内存量
-        long maxMemory = Runtime.getRuntime().maxMemory() / 1024 / 1024;
-
-        System.out.println("-Xms : " + initialMemory + "M");//-Xms : 245M
-        System.out.println("-Xmx : " + maxMemory + "M");//-Xmx : 3641M
-
-        System.out.println("系统内存大小为：" + initialMemory * 64.0 / 1024 + "G");//系统内存大小为：15.3125G
-        System.out.println("系统内存大小为：" + maxMemory * 4.0 / 1024 + "G");//系统内存大小为：14.22265625G
-
-        try {
-            Thread.sleep(1000000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
-}
+public class HeapSpaceInitial {    public static void main(String[] args) {        //返回Java虚拟机中的堆内存总量        long initialMemory = Runtime.getRuntime().totalMemory() / 1024 / 1024;        //返回Java虚拟机试图使用的最大堆内存量        long maxMemory = Runtime.getRuntime().maxMemory() / 1024 / 1024;        System.out.println("-Xms : " + initialMemory + "M");//-Xms : 245M        System.out.println("-Xmx : " + maxMemory + "M");//-Xmx : 3641M        System.out.println("系统内存大小为：" + initialMemory * 64.0 / 1024 + "G");//系统内存大小为：15.3125G        System.out.println("系统内存大小为：" + maxMemory * 4.0 / 1024 + "G");//系统内存大小为：14.22265625G        try {            Thread.sleep(1000000);        } catch (InterruptedException e) {            e.printStackTrace();        }    }}
 ```
 
 ### 2.2 堆大小分析
@@ -1397,31 +961,7 @@ public class HeapSpaceInitial {
 代码示例：
 
 ```java
-/**
- * -Xms600m -Xmx600m
- */
-public class OOMTest {
-    public static void main(String[] args) {
-        ArrayList<Picture> list = new ArrayList<>();
-        while(true){
-            try {
-                Thread.sleep(20);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            list.add(new Picture(new Random().nextInt(1024 * 1024)));
-        }
-    }
-}
-
-class Picture{
-    private byte[] pixels;
-
-    public Picture(int length) {
-        this.pixels = new byte[length];
-    }
-}
-
+/** * -Xms600m -Xmx600m */public class OOMTest {    public static void main(String[] args) {        ArrayList<Picture> list = new ArrayList<>();        while(true){            try {                Thread.sleep(20);            } catch (InterruptedException e) {                e.printStackTrace();            }            list.add(new Picture(new Random().nextInt(1024 * 1024)));        }    }}class Picture{    private byte[] pixels;    public Picture(int length) {        this.pixels = new byte[length];    }}
 ```
 
 
@@ -1455,25 +995,7 @@ class Picture{
 **测试代码**
 
 ```java
-/**
- * -Xms600m -Xmx600m
- *
- * -XX:NewRatio ： 设置新生代与老年代的比例。默认值是2.
- * -XX:SurvivorRatio ：设置新生代中Eden区与Survivor区的比例。默认值是8
- * -XX:-UseAdaptiveSizePolicy ：关闭自适应的内存分配策略 '-'关闭,'+'打开  （暂时用不到）
- * -Xmn:设置新生代的空间的大小。 （一般不设置）
- *
- */
-public class EdenSurvivorTest {
-    public static void main(String[] args) {
-        System.out.println("我只是来打个酱油~");
-        try {
-            Thread.sleep(1000000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
-}
+/** * -Xms600m -Xmx600m * * -XX:NewRatio ： 设置新生代与老年代的比例。默认值是2. * -XX:SurvivorRatio ：设置新生代中Eden区与Survivor区的比例。默认值是8 * -XX:-UseAdaptiveSizePolicy ：关闭自适应的内存分配策略 '-'关闭,'+'打开  （暂时用不到） * -Xmn:设置新生代的空间的大小。 （一般不设置） * */public class EdenSurvivorTest {    public static void main(String[] args) {        System.out.println("我只是来打个酱油~");        try {            Thread.sleep(1000000);        } catch (InterruptedException e) {            e.printStackTrace();        }    }}
 ```
 
 ## 4.对象分配过程
@@ -1506,22 +1028,7 @@ public class EdenSurvivorTest {
 ### 4.3 代码举例
 
 ```java
-public class HeapInstanceTest {
-    byte[] buffer = new byte[new Random().nextInt(1024 * 200)];
-
-    public static void main(String[] args) {
-        ArrayList<HeapInstanceTest> list = new ArrayList<HeapInstanceTest>();
-        while (true) {
-            list.add(new HeapInstanceTest());
-            try {
-                Thread.sleep(10);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-}
-
+public class HeapInstanceTest {    byte[] buffer = new byte[new Random().nextInt(1024 * 200)];    public static void main(String[] args) {        ArrayList<HeapInstanceTest> list = new ArrayList<HeapInstanceTest>();        while (true) {            list.add(new HeapInstanceTest());            try {                Thread.sleep(10);            } catch (InterruptedException e) {                e.printStackTrace();            }        }    }}
 ```
 
 <img src="https://user-gold-cdn.xitu.io/2020/5/28/1725a6c4bf09f89b?imageView2/0/w/1280/h/960/format/webp/ignore-error/1" alt="img" style="zoom:67%;" />
@@ -1585,28 +1092,7 @@ public class HeapInstanceTest {
 Young GC ->Full GC -> OOM
 
 ```java
-/** 测试GC分代回收
- * 测试MinorGC 、 MajorGC、FullGC
- * -Xms9m -Xmx9m -XX:+PrintGCDetails
- */
-public class GCTest {
-    public static void main(String[] args) {
-        int i = 0;
-        try {
-            List<String> list = new ArrayList<>();
-            String a = "testGC";
-            while (true) {
-                list.add(a);
-                a = a + a;
-                i++;
-            }
-
-        } catch (Throwable t) {
-            t.printStackTrace();
-            System.out.println("遍历次数为：" + i);
-        }
-    }
-}
+/** 测试GC分代回收 * 测试MinorGC 、 MajorGC、FullGC * -Xms9m -Xmx9m -XX:+PrintGCDetails */public class GCTest {    public static void main(String[] args) {        int i = 0;        try {            List<String> list = new ArrayList<>();            String a = "testGC";            while (true) {                list.add(a);                a = a + a;                i++;            }        } catch (Throwable t) {            t.printStackTrace();            System.out.println("遍历次数为：" + i);        }    }}
 ```
 
 <img src="C:\Users\85370\AppData\Roaming\Typora\typora-user-images\image-20210730190440054.png" alt="image-20210730190440054" style="zoom:67%;" />
@@ -1640,17 +1126,7 @@ public class GCTest {
 分配60m堆空间，新生代 20m ，Eden 16m， s0 2m， s1 2m，buffer对象20m，Eden 区无法存放buffer， 直接晋升老年代
 
 ```java
-/** 测试：大对象直接进入老年代
- * -Xms60m -Xmx60m -XX:NewRatio=2 -XX:SurvivorRatio=8 -XX:+PrintGCDetails
- */
-public class YoungOldAreaTest {
-    // 新生代 20m ，Eden 16m， s0 2m， s1 2m
-    // 老年代 40m
-    public static void main(String[] args) {
-        //Eden 区无法存放buffer  晋升老年代
-        byte[] buffer = new byte[1024 * 1024 * 20];//20m
-    }
-}
+/** 测试：大对象直接进入老年代 * -Xms60m -Xmx60m -XX:NewRatio=2 -XX:SurvivorRatio=8 -XX:+PrintGCDetails */public class YoungOldAreaTest {    // 新生代 20m ，Eden 16m， s0 2m， s1 2m    // 老年代 40m    public static void main(String[] args) {        //Eden 区无法存放buffer  晋升老年代        byte[] buffer = new byte[1024 * 1024 * 20];//20m    }}
 ```
 
 ![image-20210730215128878](C:\Users\85370\AppData\Roaming\Typora\typora-user-images\image-20210730215128878.png)
@@ -1689,19 +1165,7 @@ public class YoungOldAreaTest {
 - jinfo -flag UseTLAB （进程id），输出-XX:+UseTLAB，证明TLAB默认是开启的
 
 ```java
-/**
- * 测试-XX:UseTLAB参数是否开启的情况:默认情况是开启的
- */
-public class TLABArgsTest {
-    public static void main(String[] args) {
-        System.out.println("我只是来打个酱油~");
-        try {
-            Thread.sleep(1000000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
-}
+/** * 测试-XX:UseTLAB参数是否开启的情况:默认情况是开启的 */public class TLABArgsTest {    public static void main(String[] args) {        System.out.println("我只是来打个酱油~");        try {            Thread.sleep(1000000);        } catch (InterruptedException e) {            e.printStackTrace();        }    }}
 ```
 
 <img src="C:\Users\85370\AppData\Roaming\Typora\typora-user-images\image-20210730223849025.png" alt="image-20210730223849025" style="zoom:67%;" />
@@ -1768,12 +1232,7 @@ public class TLABArgsTest {
 ### 代码分析
 
 ```java
-public void method(){
-    V v = new V();
-    //use V
-    //......
-    v = null;
-}
+public void method(){    V v = new V();    //use V    //......    v = null;}
 ```
 
 没有发生逃逸的对象，则可以分配到栈上，随着方法执行的结束，栈空间就被移除。
@@ -1783,23 +1242,13 @@ public void method(){
 
 
 ```java
-public static StringBuffer createStringBuffer(String s1,String s2){
-    StringBuffer sb = new StringBuffer();
-    sb.append(s1);
-    sb.append(s2);
-    return sb;
-}
+public static StringBuffer createStringBuffer(String s1,String s2){    StringBuffer sb = new StringBuffer();    sb.append(s1);    sb.append(s2);    return sb;}
 ```
 
 由于上述方法返回的sb在方法外被使用，发生了逃逸，上述代码如果想要StringBuffer sb不逃出方法，可以这样写：
 
 ```java
-public static String createStringBuffer(String s1,String s2){
-    StringBuffer sb = new StringBuffer();
-    sb.append(s1);
-    sb.append(s2);
-    return sb.toString();
-}
+public static String createStringBuffer(String s1,String s2){    StringBuffer sb = new StringBuffer();    sb.append(s1);    sb.append(s2);    return sb.toString();}
 ```
 
 返回出的是一个新的String类型字符串，所以sb引用的对象没有逃逸
@@ -1809,43 +1258,7 @@ public static String createStringBuffer(String s1,String s2){
 #### 逃逸分析
 
 ```java
-/**
- * 逃逸分析
- *
- *  如何快速的判断是否发生了逃逸分析，就看new的对象实体是否有可能在方法外被引用。
- */
-public class EscapeAnalysis {
-
-    public EscapeAnalysis obj;
-
-    /*
-    方法返回EscapeAnalysis对象，发生逃逸
-     */
-    public EscapeAnalysis getInstance(){
-        return obj == null? new EscapeAnalysis() : obj;
-    }
-    /*
-    为成员属性赋值，发生逃逸
-     */
-    public void setObj(){
-        this.obj = new EscapeAnalysis();
-    }
-    //思考：如果当前的obj引用声明为static的？仍然会发生逃逸。
-
-    /*
-    对象的作用域仅在当前方法中有效，没有发生逃逸
-     */
-    public void useEscapeAnalysis(){
-        EscapeAnalysis e = new EscapeAnalysis();
-    }
-    /*
-    引用成员变量的值，发生逃逸
-     */
-    public void useEscapeAnalysis1(){
-        EscapeAnalysis e = getInstance();
-        //getInstance().xxx()同样会发生逃逸
-    }
-}
+/** * 逃逸分析 * *  如何快速的判断是否发生了逃逸分析，就看new的对象实体是否有可能在方法外被引用。 */public class EscapeAnalysis {    public EscapeAnalysis obj;    /*    方法返回EscapeAnalysis对象，发生逃逸     */    public EscapeAnalysis getInstance(){        return obj == null? new EscapeAnalysis() : obj;    }    /*    为成员属性赋值，发生逃逸     */    public void setObj(){        this.obj = new EscapeAnalysis();    }    //思考：如果当前的obj引用声明为static的？仍然会发生逃逸。    /*    对象的作用域仅在当前方法中有效，没有发生逃逸     */    public void useEscapeAnalysis(){        EscapeAnalysis e = new EscapeAnalysis();    }    /*    引用成员变量的值，发生逃逸     */    public void useEscapeAnalysis1(){        EscapeAnalysis e = getInstance();        //getInstance().xxx()同样会发生逃逸    }}
 ```
 
 ### 参数设置
@@ -1875,36 +1288,7 @@ public class EscapeAnalysis {
 以下代码，关闭逃逸分析（-XX:-DoEscapeAnalysi），维护10000000个对象，如果开启逃逸分析，只维护少量对象（JDK7 逃逸分析默认开启）
 
 ```java
-/**
- * 栈上分配测试
- * -Xmx1G -Xms1G -XX:-DoEscapeAnalysis -XX:+PrintGCDetails
- */
-public class StackAllocation {
-    public static void main(String[] args) {
-        long start = System.currentTimeMillis();
-
-        for (int i = 0; i < 10000000; i++) {
-            alloc();
-        }
-        // 查看执行时间
-        long end = System.currentTimeMillis();
-        System.out.println("花费的时间为： " + (end - start) + " ms");
-        // 为了方便查看堆内存中对象个数，线程sleep
-        try {
-            Thread.sleep(1000000);
-        } catch (InterruptedException e1) {
-            e1.printStackTrace();
-        }
-    }
-
-    private static void alloc() {
-        User user = new User();//未发生逃逸
-    }
-
-    static class User {
-
-    }
-}
+/** * 栈上分配测试 * -Xmx1G -Xms1G -XX:-DoEscapeAnalysis -XX:+PrintGCDetails */public class StackAllocation {    public static void main(String[] args) {        long start = System.currentTimeMillis();        for (int i = 0; i < 10000000; i++) {            alloc();        }        // 查看执行时间        long end = System.currentTimeMillis();        System.out.println("花费的时间为： " + (end - start) + " ms");        // 为了方便查看堆内存中对象个数，线程sleep        try {            Thread.sleep(1000000);        } catch (InterruptedException e1) {            e1.printStackTrace();        }    }    private static void alloc() {        User user = new User();//未发生逃逸    }    static class User {    }}
 ```
 
 #### 同步省略
@@ -1913,24 +1297,7 @@ public class StackAllocation {
 - 在动态编译同步块的时候，JIT编译器可以借助逃逸分析来判断同步块**所使用的锁对象是否只能够被一个线程访问。如果发现锁对象只能通过一个线程访问到，那么JIT编译器在编译这个同步块的时候就会取消对这部分代码的同步**。这样就能大大提高并发性和性能。这个取消同步的过程就叫同步省略，也叫==锁消除==
 
 ```java
-/**
- * 同步省略说明
- */
-public class SynchronizedTest {
-    public void f() {
-        Object hollis = new Object();
-        synchronized(hollis) {
-            System.out.println(hollis);
-        }
-    }
-    //代码中对hollis这个对象进行加锁，但是hollis对象的生命周期只在f（）方法中
-    //并不会被其他线程所访问控制，所以在JIT编译阶段就会被优化掉。
-    //优化为 ↓
-    public void f2() {
-        Object hollis = new Object();
-        System.out.println(hollis);
-    }
-}
+/** * 同步省略说明 */public class SynchronizedTest {    public void f() {        Object hollis = new Object();        synchronized(hollis) {            System.out.println(hollis);        }    }    //代码中对hollis这个对象进行加锁，但是hollis对象的生命周期只在f（）方法中    //并不会被其他线程所访问控制，所以在JIT编译阶段就会被优化掉。    //优化为 ↓    public void f2() {        Object hollis = new Object();        System.out.println(hollis);    }}
 ```
 
 #### 分离对象或标量替换
@@ -1940,32 +1307,13 @@ public class SynchronizedTest {
 - 在JIT阶段，如果经过逃逸分析，发现一个对象不会被外界访问的话，那么经过JIT优化，就会把这个对象拆解成若干个其中包含的若干个成员变量来替代。这个过程就是标量替换
 
 ```java
-public class ScalarTest {
-    public static void main(String[] args) {
-        alloc();   
-    }
-    public static void alloc(){
-        Point point = new Point(1,2);
-    }
-}
-class Point{
-    private int x;
-    private int y;
-    
-    public Point(int x,int y){
-        this.x = x;
-        this.y = y;
-    }
-}
+public class ScalarTest {    public static void main(String[] args) {        alloc();       }    public static void alloc(){        Point point = new Point(1,2);    }}class Point{    private int x;    private int y;        public Point(int x,int y){        this.x = x;        this.y = y;    }}
 ```
 
 以上代码，经过标量替换后，就会变成
 
 ```java
-public static void alloc(){
-    int x = 1;
-    int y = 2;
-}
+public static void alloc(){    int x = 1;    int y = 2;}
 ```
 
   可以看到，Point这个聚合量经过逃逸分析后，发现他并没有逃逸，就被替换成两个标量了。那么标量替换有什么好处呢？就是可以大大减少堆内存的占用。因为一旦不需要创建对象了，那么就不再需要分配堆内存了。
@@ -1974,31 +1322,7 @@ public static void alloc(){
 **测试代码**
 
 ```java
-/**
- * 标量替换测试
- *  -Xmx100m -Xms100m -XX:+DoEscapeAnalysis -XX:+PrintGC -XX:-EliminateAllocations
- */
-public class ScalarReplace {
-    public static class User {
-        public int id;//标量（无法再分解成更小的数据）
-        public String name;//聚合量（String还可以分解为char数组）
-    }
-
-    public static void alloc() {
-        User u = new User();//未发生逃逸
-        u.id = 5;
-        u.name = "www.atguigu.com";
-    }
-
-    public static void main(String[] args) {
-        long start = System.currentTimeMillis();
-        for (int i = 0; i < 10000000; i++) {
-            alloc();
-        }
-        long end = System.currentTimeMillis();
-        System.out.println("花费的时间为： " + (end - start) + " ms");
-    }
-}
+/** * 标量替换测试 *  -Xmx100m -Xms100m -XX:+DoEscapeAnalysis -XX:+PrintGC -XX:-EliminateAllocations */public class ScalarReplace {    public static class User {        public int id;//标量（无法再分解成更小的数据）        public String name;//聚合量（String还可以分解为char数组）    }    public static void alloc() {        User u = new User();//未发生逃逸        u.id = 5;        u.name = "www.atguigu.com";    }    public static void main(String[] args) {        long start = System.currentTimeMillis();        for (int i = 0; i < 10000000; i++) {            alloc();        }        long end = System.currentTimeMillis();        System.out.println("花费的时间为： " + (end - start) + " ms");    }}
 ```
 
 #### 逃逸分析小结
@@ -2025,7 +1349,7 @@ public class ScalarReplace {
 
 
 
-# *JVM_06 运行时数据区3-方法区
+# JVM_06 运行时数据区3-方法区
 
 ## 1. 堆、栈、方法区的交互关系
 
@@ -2054,18 +1378,7 @@ public class ScalarReplace {
 **例，使用jvisualvm查看加载类的个数**
 
 ```java
-public class MethodAreaDemo {
-    public static void main(String[] args) {
-        System.out.println("start...");
-        try {
-            Thread.sleep(1000000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        System.out.println("end...");
-    }
-}
+public class MethodAreaDemo {    public static void main(String[] args) {        System.out.println("start...");        try {            Thread.sleep(1000000);        } catch (InterruptedException e) {            e.printStackTrace();        }        System.out.println("end...");    }}
 ```
 
 <img src="https://user-gold-cdn.xitu.io/2020/6/7/1728de12f8c04ea5?imageView2/0/w/1280/h/960/format/webp/ignore-error/1" alt="img"  />
@@ -2107,13 +1420,7 @@ public class MethodAreaDemo {
 - 如果初始化的高水位线设置过低，.上 述高水位线调整情况会发生很多次。通过垃圾回收器的日志可以观察到Full GC多次调用。为了避免频繁地GC，建议将- XX ：MetaspaceSize设置为一个相对较高的值。
 
 ```markdown
- *  jdk7及以前：
- *  查询 jps  -> jinfo -flag PermSize [进程id]
- *  -XX:PermSize=100m -XX:MaxPermSize=100m
- *
- *  jdk8及以后：
- *  查询 jps  -> jinfo -flag MetaspaceSize [进程id]
- *  -XX:MetaspaceSize=100m  -XX:MaxMetaspaceSize=100m
+ *  jdk7及以前： *  查询 jps  -> jinfo -flag PermSize [进程id] *  -XX:PermSize=100m -XX:MaxPermSize=100m * *  jdk8及以后： *  查询 jps  -> jinfo -flag MetaspaceSize [进程id] *  -XX:MetaspaceSize=100m  -XX:MaxMetaspaceSize=100m
 ```
 
 ### 方法区OOM
@@ -2125,35 +1432,7 @@ public class MethodAreaDemo {
 > 以下代码在JDK8环境下会报 Exception in thread "main" java.lang.OutOfMemoryError: Compressed class space 错误
 
 ```java
-/**
- * jdk6/7中：
- * -XX:PermSize=10m -XX:MaxPermSize=10m
- *
- * jdk8中：
- * -XX:MetaspaceSize=10m -XX:MaxMetaspaceSize=10m
- *
- */
-public class OOMTest extends ClassLoader {
-    public static void main(String[] args) {
-        int j = 0;
-        try {
-            OOMTest test = new OOMTest();
-            for (int i = 0; i < 10000; i++) {
-                //创建ClassWriter对象，用于生成类的二进制字节码
-                ClassWriter classWriter = new ClassWriter(0);
-                //指明版本号，修饰符，类名，包名，父类，接口
-                classWriter.visit(Opcodes.V1_6, Opcodes.ACC_PUBLIC, "Class" + i, null, "java/lang/Object", null);
-                //返回byte[]
-                byte[] code = classWriter.toByteArray();
-                //类的加载
-                test.defineClass("Class" + i, code, 0, code.length);//Class对象
-                j++;
-            }
-        } finally {
-            System.out.println(j);
-        }
-    }
-}
+/** * jdk6/7中： * -XX:PermSize=10m -XX:MaxPermSize=10m * * jdk8中： * -XX:MetaspaceSize=10m -XX:MaxMetaspaceSize=10m * */public class OOMTest extends ClassLoader {    public static void main(String[] args) {        int j = 0;        try {            OOMTest test = new OOMTest();            for (int i = 0; i < 10000; i++) {                //创建ClassWriter对象，用于生成类的二进制字节码                ClassWriter classWriter = new ClassWriter(0);                //指明版本号，修饰符，类名，包名，父类，接口                classWriter.visit(Opcodes.V1_6, Opcodes.ACC_PUBLIC, "Class" + i, null, "java/lang/Object", null);                //返回byte[]                byte[] code = classWriter.toByteArray();                //类的加载                test.defineClass("Class" + i, code, 0, code.length);//Class对象                j++;            }        } finally {            System.out.println(j);        }    }}
 ```
 
 ## 4.方法区的内部结构
@@ -2198,25 +1477,7 @@ JVM必须保存所有方法的以下信息，同域信息一样包括声明顺�
 > 以下代码不会报空指针异常
 
 ```java
-public class MethodAreaTest {
-    public static void main(String[] args) {
-        Order order = null;
-        order.hello();
-        System.out.println(order.count);
-    }
-}
-
-class Order {
-    public static int count = 1;  //类加载了就会调用类构造器<clinit> 初始化赋值
-    public static final int number = 2;  //编译完就赋值了
-    public final int n = 3;  //编译完就赋值了
-    public int m = 4;  //等到创建对象 调用了对象构造器<init> 才会初始化赋值
-
-
-    public static void hello() {
-        System.out.println("hello!");
-    }
-}
+public class MethodAreaTest {    public static void main(String[] args) {        Order order = null;        order.hello();        System.out.println(order.count);    }}class Order {    public static int count = 1;  //类加载了就会调用类构造器<clinit> 初始化赋值    public static final int number = 2;  //编译完就赋值了    public final int n = 3;  //编译完就赋值了    public int m = 4;  //等到创建对象 调用了对象构造器<init> 才会初始化赋值    public static void hello() {        System.out.println("hello!");    }}
 ```
 
 **全局常量 static final** 被声明为final的类变量的处理方法则不同，每个全局常量在编译的时候就被分配了。
@@ -2225,14 +1486,7 @@ class Order {
  Order.class字节码文件，右键Open in Teminal打开控制台，使用javap -v -p Order.class > test.txt 将字节码文件反编译并输出为txt文件,可以看到被声明为static final的常量number在编译的时候就被赋值了，这不同于没有被final修饰的static变量count是在类加载的准备阶段被赋默认值
 
 ```java
- public static int count;
-    descriptor: I
-    flags: ACC_PUBLIC, ACC_STATIC
-
-  public static final int number;
-    descriptor: I
-    flags: ACC_PUBLIC, ACC_STATIC, ACC_FINAL
-    ConstantValue: int 2
+ public static int count;    descriptor: I    flags: ACC_PUBLIC, ACC_STATIC  public static final int number;    descriptor: I    flags: ACC_PUBLIC, ACC_STATIC, ACC_FINAL    ConstantValue: int 2
 ```
 
 <img src="https://user-gold-cdn.xitu.io/2020/6/7/1728de32507c326a?imageView2/0/w/1280/h/960/format/webp/ignore-error/1" alt="img" style="zoom:67%;" />
@@ -2250,10 +1504,7 @@ class Order {
 比如如下代码，虽然只有 194 字节，但是里面却使用了 string、System、Printstream 及 Object 等结构。这里代码量其实已经很小了。如果代码多，引用到的结构会更多！
 
 ```java
-Public class Simpleclass {
-public void sayhelloo() {
-    System.out.Println (hello) }
-}
+Public class Simpleclass {public void sayhelloo() {    System.out.Println (hello) }}
 ```
 
 几种在常量池内存储的数据类型包括：
@@ -2283,36 +1534,13 @@ public void sayhelloo() {
 ## 5.方法区的使用举例
 
 ```java
-public class MethodAreaDemo {
-    public static void main(String[] args) {
-        int x = 500;
-        int y = 100;
-        int a = x / y;
-        int b = 50;
-        System.out.println(a + b);
-    }
-}
+public class MethodAreaDemo {    public static void main(String[] args) {        int x = 500;        int y = 100;        int a = x / y;        int b = 50;        System.out.println(a + b);    }}
 ```
 
 **main方法的字节码指令**
 
 ```java
- 0 sipush 500
- 3 istore_1
- 4 bipush 100
- 6 istore_2
- 7 iload_1
- 8 iload_2
- 9 idiv
-10 istore_3
-11 bipush 50
-13 istore 4
-15 getstatic #2 <java/lang/System.out>
-18 iload_3
-19 iload 4
-21 iadd
-22 invokevirtual #3 <java/io/PrintStream.println>
-25 return
+ 0 sipush 500 3 istore_1 4 bipush 100 6 istore_2 7 iload_1 8 iload_2 9 idiv10 istore_311 bipush 5013 istore 415 getstatic #2 <java/lang/System.out>18 iload_319 iload 421 iadd22 invokevirtual #3 <java/io/PrintStream.println>25 return
 ```
 
 <img src="https://user-gold-cdn.xitu.io/2020/6/7/1728de4f75844d83?imageView2/0/w/1280/h/960/format/webp/ignore-error/1" alt="img" style="zoom:67%;" />
@@ -2349,37 +1577,11 @@ jdk7中将StringTable放到了堆空间中。因为永久代的回收效率很�
 ### 如何证明静态变量存在哪
 
 ```java
-/**
- * 《深入理解Java虚拟机》中的案例：
- * staticObj、instanceObj、localObj存放在哪里？
- * 变量是变量，对象是对象，变量只是引用对象的地址
- */
-public class StaticObjTest {
-    static class Test {
-        static ObjectHolder staticObj = new ObjectHolder(); //静态变量存放在堆中的当前类的Class类对象中
-        ObjectHolder instanceObj = new ObjectHolder(); //非静态成员变量随着创建的对象一起分配在堆中
-
-        void foo() {
-            ObjectHolder localObj = new ObjectHolder(); //局部变量在这个方法对应栈帧的局部变量表中
-            System.out.println("done");
-        }
-    }
-
-    private static class ObjectHolder {
-    }
-
-    public static void main(String[] args) {
-        Test test = new StaticObjTest.Test();
-        test.foo();
-    }
-}
+/** * 《深入理解Java虚拟机》中的案例： * staticObj、instanceObj、localObj存放在哪里？ * 变量是变量，对象是对象，变量只是引用对象的地址 */public class StaticObjTest {    static class Test {        static ObjectHolder staticObj = new ObjectHolder(); //静态变量存放在堆中的当前类的Class类对象中        ObjectHolder instanceObj = new ObjectHolder(); //非静态成员变量随着创建的对象一起分配在堆中        void foo() {            ObjectHolder localObj = new ObjectHolder(); //局部变量在这个方法对应栈帧的局部变量表中            System.out.println("done");        }    }    private static class ObjectHolder {    }    public static void main(String[] args) {        Test test = new StaticObjTest.Test();        test.foo();    }}
 ```
 
 ```
-hsdb>scanoops 0x00007f32c7800000 0x00007f32c7b50000 JHSDB_ _TestCase$Obj ectHolder
-0x00007f32c7a7c458 JHSDB_ TestCase$Obj ectHolder
-0x00007f32c7a7c480 JHSDB_ TestCase$Obj ectHolder
-0x00007f32c7a7c490 JHSDB_ TestCase$Obj ectHolder
+hsdb>scanoops 0x00007f32c7800000 0x00007f32c7b50000 JHSDB_ _TestCase$Obj ectHolder0x00007f32c7a7c458 JHSDB_ TestCase$Obj ectHolder0x00007f32c7a7c480 JHSDB_ TestCase$Obj ectHolder0x00007f32c7a7c490 JHSDB_ TestCase$Obj ectHolder
 ```
 
 - 测试发现：三个对象的数据在内存中的地址都落在Eden区范围内，所以结论：**只要是对象实例必然会在Java堆中分配。**
@@ -2460,7 +1662,7 @@ java内存分配
 
 
 
-# *JVM_07 运行时数据区4-对象的实例化内存布局与访问定位+直接内存
+# JVM_07 运行时数据区4-对象的实例化内存布局与访问定位+直接内存
 
 
 
@@ -2496,9 +1698,9 @@ java内存分配
 首先计算对象占用空间大小，接着在堆中划分一块内存给新对象。 如果实例成员变量是引用变量，仅分配引用变量空间即可，即4个字节大小。
 
 - 如果内存规整，使用指针碰撞
-   如果内存是规整的，那么虚拟机将采用的是指针碰撞法（BumpThePointer）来为对象分配内存。意思是所有用过的内存在一边，空闲的内存在另外一边，中间放着一个指针作为分界点的指示器，分配内存就仅仅是把指针向空闲那边挪动一段与对象大小相等的距离罢了。如果垃圾收集器选择的是Serial、ParNew这种基于压缩算法的，虚拟机采用这种分配方式。一般使用带有compact （整理）过程的收集器时，使用指针碰撞。
+  如果内存是规整的，那么虚拟机将采用的是指针碰撞法（BumpThePointer）来为对象分配内存。意思是所有用过的内存在一边，空闲的内存在另外一边，中间放着一个指针作为分界点的指示器，分配内存就仅仅是把指针向空闲那边挪动一段与对象大小相等的距离罢了。如果垃圾收集器选择的是Serial、ParNew这种基于压缩算法的，虚拟机采用这种分配方式。一般使用带有compact （整理）过程的收集器时，使用指针碰撞。
 - 如果内存不规整，虚拟机需要维护一个列表，使用空闲列表分配
-   如果内存不是规整的，已使用的内存和未使用的内存相互交错，那么虛拟机将采用的是空闲列表法来为对象分配内存。意思是虚拟机维护了一个列表，记录上哪些内存块是可用的，再分配的时候从列表中找到一块足够大的空间划分给对象实例，并更新列表上的内容。这种分配方式成为“空闲列表（Free List） ”。
+  如果内存不是规整的，已使用的内存和未使用的内存相互交错，那么虛拟机将采用的是空闲列表法来为对象分配内存。意思是虚拟机维护了一个列表，记录上哪些内存块是可用的，再分配的时候从列表中找到一块足够大的空间划分给对象实例，并更新列表上的内容。这种分配方式成为“空闲列表（Free List） ”。
 
 说明：选择哪种分配方式由Java堆是否规整决定，而Java堆是否规整又由所采用的垃圾收集器是否带有压缩整理功能决定。
 
@@ -2528,32 +1730,7 @@ java内存分配
 在Java程序的视角看来，初始化才正式开始。初始化成员变量，执行实例化代码块，调用类的构造方法，并把堆内对象的首地址赋值给引用变量。 因此一般来说（由字节码中是否跟随有invokespecial指令所决定），new指令之 后会接着就是执行方法，把对象按照程序员的意愿进行初始化，这样一个真正可用的对象才算完全创建出来。
 
 ```java
-/**
- * 测试对象实例化的过程
- *  ① 加载类元信息 - ② 为对象分配内存 - ③ 处理并发问题  - ④ 属性的默认初始化（零值初始化）
- *  - ⑤ 设置对象头的信息 - ⑥ 属性的显式初始化、代码块中初始化、构造器中初始化
- *
- *  给对象的属性赋值的操作：
- *  ① 属性的默认初始化 - ② 显式初始化 / ③ 代码块中初始化 - ④ 构造器中初始化
- * 
- */
-public class Customer{
-    int id = 1001;
-    String name;
-    Account acct;
-
-    {
-        name = "匿名客户";
-    }
-    public Customer(){
-        acct = new Account();
-    }
-
-}
-
-class Account{
-
-}
+/** * 测试对象实例化的过程 *  ① 加载类元信息 - ② 为对象分配内存 - ③ 处理并发问题  - ④ 属性的默认初始化（零值初始化） *  - ⑤ 设置对象头的信息 - ⑥ 属性的显式初始化、代码块中初始化、构造器中初始化 * *  给对象的属性赋值的操作： *  ① 属性的默认初始化 - ② 显式初始化 / ③ 代码块中初始化 - ④ 构造器中初始化 *  */public class Customer{    int id = 1001;    String name;    Account acct;    {        name = "匿名客户";    }    public Customer(){        acct = new Account();    }}class Account{}
 ```
 
 
@@ -2589,11 +1766,7 @@ class Account{
 ### 小结
 
 ```java
-public class CustomerTest {
-    public static void main(String[] args) {
-        Customer cust = new Customer();
-    }
-}
+public class CustomerTest {    public static void main(String[] args) {        Customer cust = new Customer();    }}
 ```
 
 <img src="C:\Users\85370\AppData\Roaming\Typora\typora-user-images\image-20210731204424284.png" alt="image-20210731204424284" style="zoom:67%;" />
@@ -2619,30 +1792,7 @@ JVM是如何通过栈帧中的对象引|用访问到其内部的对象实例的�
 - **直接内存是Java堆外的**、直接向系统申请的内存区间
 
 ```java
-/**
- *  IO                  NIO (New IO / Non-Blocking IO)
- *  byte[] / char[]     Buffer
- *  Stream              Channel
- *
- * 查看直接内存的占用与释放
- */
-public class BufferTest {
-    private static final int BUFFER = 1024 * 1024 * 1024;//1GB
-
-    public static void main(String[] args){
-        //直接分配本地内存空间
-        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(BUFFER);
-        System.out.println("直接内存分配完毕，请求指示！");
-
-        Scanner scanner = new Scanner(System.in);
-        scanner.next();
-
-        System.out.println("直接内存开始释放！");
-        byteBuffer = null;
-        System.gc();
-        scanner.next();
-    }
-}
+/** *  IO                  NIO (New IO / Non-Blocking IO) *  byte[] / char[]     Buffer *  Stream              Channel * * 查看直接内存的占用与释放 */public class BufferTest {    private static final int BUFFER = 1024 * 1024 * 1024;//1GB    public static void main(String[] args){        //直接分配本地内存空间        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(BUFFER);        System.out.println("直接内存分配完毕，请求指示！");        Scanner scanner = new Scanner(System.in);        scanner.next();        System.out.println("直接内存开始释放！");        byteBuffer = null;        System.gc();        scanner.next();    }}
 ```
 
 - 来源于NIO，通过存在堆中的DirectByteBuffer操作Native内存
@@ -2661,34 +1811,7 @@ public class BufferTest {
 - 也可能导致OutOfMemoryError异常:OutOfMemoryError: Direct buffer memory
 
 ```java
-/**
- * 本地内存的OOM:  OutOfMemoryError: Direct buffer memory
- */
-public class BufferTest2 {
-    private static final int BUFFER = 1024 * 1024 * 20;//20MB
-
-    public static void main(String[] args) {
-        ArrayList<ByteBuffer> list = new ArrayList<>();
-
-        int count = 0;
-        try {
-            while(true){
-                ByteBuffer byteBuffer = ByteBuffer.allocateDirect(BUFFER);
-                list.add(byteBuffer);
-                count++;
-                try {
-                    Thread.sleep(100);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-        } finally {
-            System.out.println(count);
-        }
-
-
-    }
-}
+/** * 本地内存的OOM:  OutOfMemoryError: Direct buffer memory */public class BufferTest2 {    private static final int BUFFER = 1024 * 1024 * 20;//20MB    public static void main(String[] args) {        ArrayList<ByteBuffer> list = new ArrayList<>();        int count = 0;        try {            while(true){                ByteBuffer byteBuffer = ByteBuffer.allocateDirect(BUFFER);                list.add(byteBuffer);                count++;                try {                    Thread.sleep(100);                } catch (InterruptedException e) {                    e.printStackTrace();                }            }        } finally {            System.out.println(count);        }    }}
 ```
 
 - 由于直接内存在Java堆外，因此它的大小不会直接受限于一Xmx指定的最大 堆大小，但是系统内存是有限的，Java堆和直接内存的总和依然受限于操作系统能给出的最大内存。
@@ -2706,7 +1829,7 @@ public class BufferTest2 {
 
 
 
-# *JVM_08 执行引擎（Execution Engine）
+# JVM_08 执行引擎（Execution Engine）
 
 ## 1 执行引擎概述
 
@@ -2776,7 +1899,7 @@ JDK1.0时代，将Java语言定位为“解释执行”还是比较准确的。�
 
 - 为了使计算机用户编程序更容易些，后来就出现了各种高级计算机语言。高级语言比机器语言、汇编语言更接近人的语言
 - 当计算机执行高级语言编写的程序时，仍然需要把程序解释和编译成机器的指令码。完成这个过程的程序就叫做解释程序或编译程序。
-   <img src="https://user-gold-cdn.xitu.io/2020/6/8/1729335b173e3d31?imageView2/0/w/1280/h/960/format/webp/ignore-error/1" alt="6" style="zoom:67%;" />
+  <img src="https://user-gold-cdn.xitu.io/2020/6/8/1729335b173e3d31?imageView2/0/w/1280/h/960/format/webp/ignore-error/1" alt="6" style="zoom:67%;" />
 - 
 
 #### 字节码
@@ -2792,7 +1915,7 @@ JDK1.0时代，将Java语言定位为“解释执行”还是比较准确的。�
 
 - 编译过程：是读取源程序（字符流），对 之进行词法和语法的分析，将高级语言指令转换为功能等效的汇编代码
 - 汇编过程：实际上指把汇编语言代码翻译成目标机器指令的过程。
-   <img src="https://user-gold-cdn.xitu.io/2020/6/8/172933609774cda3?imageView2/0/w/1280/h/960/format/webp/ignore-error/1" alt="img" style="zoom:67%;" />
+  <img src="https://user-gold-cdn.xitu.io/2020/6/8/172933609774cda3?imageView2/0/w/1280/h/960/format/webp/ignore-error/1" alt="img" style="zoom:67%;" />
 
 
 
@@ -2876,7 +1999,7 @@ java代码的执行分类：
 - 这个计数器就用于统计方法被调用的次数，它的默认阈值在Client 模式 下是1500 次，在Server 模式下是10000 次。超过这个阈值，就会触发JIT编译。
 - 这个阈值可以通过虚拟机参数一XX ：CompileThreshold来人为设定。
 - 当一个方法被调用时， 会先检查该方法是否存在被JIT编译过的版本，如 果存在，则优先使用编译后的本地代码来执行。如果不存在已被编译过的版本，则将此方法的调用计数器值加1，然后判断方法调用计数器与回边计数器值之和是否超过方法调用计数器的阈值。如果已超过阈值，那么将会向即时编译器提交一个该方法的代码编译请求。
-   ![10](https://user-gold-cdn.xitu.io/2020/6/8/172933785afec215?imageView2/0/w/1280/h/960/format/webp/ignore-error/1)
+  ![10](https://user-gold-cdn.xitu.io/2020/6/8/172933785afec215?imageView2/0/w/1280/h/960/format/webp/ignore-error/1)
 
 **热度衰减**
 
@@ -2905,35 +2028,7 @@ java代码的执行分类：
 - 混合模式速度更快
 
 ```java
-/**
- * 测试解释器模式和JIT编译模式
- *  -Xint  : 6520ms
- *  -Xcomp : 950ms
- *  -Xmixed : 936ms
- */
-public class IntCompTest {
-    public static void main(String[] args) {
-        long start = System.currentTimeMillis();
-        testPrimeNumber(1000000);
-        long end = System.currentTimeMillis();
-        System.out.println("花费的时间为：" + (end - start));
-    }
-
-    public static void testPrimeNumber(int count){
-        for (int i = 0; i < count; i++) {
-            //计算100以内的质数
-            label:for(int j = 2;j <= 100;j++){
-                for(int k = 2;k <= Math.sqrt(j);k++){
-                    if(j % k == 0){
-                        continue label;
-                    }
-                }
-                //System.out.println(j);
-            }
-
-        }
-    }
-}
+/** * 测试解释器模式和JIT编译模式 *  -Xint  : 6520ms *  -Xcomp : 950ms *  -Xmixed : 936ms */public class IntCompTest {    public static void main(String[] args) {        long start = System.currentTimeMillis();        testPrimeNumber(1000000);        long end = System.currentTimeMillis();        System.out.println("花费的时间为：" + (end - start));    }    public static void testPrimeNumber(int count){        for (int i = 0; i < count; i++) {            //计算100以内的质数            label:for(int j = 2;j <= 100;j++){                for(int k = 2;k <= Math.sqrt(j);k++){                    if(j % k == 0){                        continue label;                    }                }                //System.out.println(j);            }        }    }}
 ```
 
 #### 5.2.3 HotSpot VM 中的 JIT分类
@@ -2984,6 +2079,9 @@ public class IntCompTest {
   - 破坏了java"一次编译，到处运行”，必须为每个不同硬件、oS编译对应的发行包。
   - 降低了Java链接过程的动态性，加载的代码在编译期就必须全部已知。
   - 还需要继续优化中，最初只支持Linux x64 java base
+
+------
+
 # JVM_09 字符串常量池StringTable
 
 ## 1.String的基本特性
